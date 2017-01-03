@@ -1,45 +1,70 @@
-import React from 'react';
-import SelectedFoods from './SelectedFoods';
-import FoodSearch from './FoodSearch';
+import React, { Component } from 'react';
+import logo from './logo.svg';
+import './App.css';
+import client from './client'
 
-const App = React.createClass({
-  getInitialState: function () {
-    return {
-      selectedFoods: [],
-    };
-  },
-  render: function () {
+class App extends Component {
+
+  constructor() {
+    super()
+    this.state = {
+      tweets: [],
+      isLoading: true
+    }
+  }
+
+  componentWillMount() {
+    this.getTweets()
+    this.startPoll()
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this.timeout)
+  }
+
+  getTweets() {
+    this.setState({ isLoading: true})
+    client.get(tweets => {
+      console.log("refreshing tweets")
+      this.setState({ 
+        tweets,
+        isLoading: false 
+      })
+    })
+  }
+
+  startPoll() {
+    this.timeout = setTimeout(() => {
+      this.getTweets()
+    }, 15*1000)
+  }
+
+  render() {
     return (
-      <div className='App'>
-        <div className='ui text container'>
-          <SelectedFoods
-            foods={this.state.selectedFoods}
-            onFoodClick={
-              (idx) => (
-                this.setState({
-                  selectedFoods: [
-                    ...this.state.selectedFoods.slice(0, idx),
-                    ...this.state.selectedFoods.slice(
-                      idx + 1, this.state.selectedFoods.length
-                    ),
-                  ],
-                })
-              )
-            }
-          />
-          <FoodSearch
-            onFoodClick={
-              (food) => (
-                this.setState({
-                  selectedFoods: this.state.selectedFoods.concat(food),
-                })
-              )
-            }
-          />
+      <div className="App">
+        <div className="App-header">
+          <img src={logo} className="App-logo" alt="logo" />
+          <h2>Welcome to Notifier</h2>
         </div>
+        {this.state.isLoading && 
+          <p>Loading...</p>
+        }
+        <p className="App-intro">
+          Tweets
+        </p>
+        <ul>
+          {this.state.tweets.map((tweet, index) => {
+            return(
+              <li key={index}> 
+                <h3>{tweet.created_at}</h3>
+                <p>{tweet.text}</p>
+              </li>
+            )
+          })}
+        </ul>
       </div>
     );
-  },
-});
+  }
+}
 
 export default App;
