@@ -16,7 +16,8 @@
     "express": "4.13.3",
     "fs": "0.0.2",
     "sql.js": "^0.3.2",
-    "twitter": "1.7.0"
+    "twitter": "1.7.0",
+    "web-push": "3.2.1"
   },
   "scripts": {
     "start": "concurrently \"npm run server\" \"npm run client\"",

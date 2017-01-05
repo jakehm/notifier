@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 
 const twitter = require('./twitterAPI')
+const webpush = require('web-push')
 
 app.set('port', (process.env.PORT || 3001));
 
@@ -9,6 +10,14 @@ app.set('port', (process.env.PORT || 3001));
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static('client/build'));
 }
+
+const vapidKeys = webpush.generateVAPIDKeys()
+webpush.setVapidDetails(
+  'mailto:jake@lightninging.us',
+  vapidKeys.publicKey,
+  vapidKeys.privateKey
+)
+
 //endpoint is /api/tweets?q=realDonaldTrump
 app.get('/api/tweets', (req, res) => {
 /*  const param = req.query.q;

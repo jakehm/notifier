@@ -39,6 +39,34 @@ class App extends Component {
     }, 15*1000)
   }
 
+  subscribe(e) {
+    let endpoint
+    navigator.serviceWorker.register('service-worker.js')
+    .then(registration => {
+      return registration.pushManager.getSubscription()
+      .then(subscription => {
+        
+        if (subscription) {
+          return subscription
+        }
+        
+        return registration.pushManager.subscribe({ userVisibleOnly: true })
+      })
+    }).then(subscription => {
+      endpoint = subscription.endpoint
+
+      fetch('/api/register', {
+        method: 'post',
+        headers: {
+          'Content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          endpoint: subscription.endpoint
+        })
+      })
+    }) 
+  }
+
   render() {
     return (
       <div className="App">
@@ -49,6 +77,7 @@ class App extends Component {
         {this.state.isLoading && 
           <p>Loading...</p>
         }
+        <button onClick={this.subscribe}>subscribe</button>
         <p className="App-intro">
           Tweets
         </p>
