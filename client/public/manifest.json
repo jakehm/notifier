@@ -1,0 +1,12 @@
+{
+  "name": "Notifier",
+  "short_name": "notifier",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/ico"
+    }
+  ]
+}

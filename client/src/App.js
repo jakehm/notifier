@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import client from './client'
+import urlsafeBase64 from 'urlsafe-base64'
 
 class App extends Component {
 
@@ -40,31 +41,39 @@ class App extends Component {
   }
 
   subscribe(e) {
-    let endpoint
-    navigator.serviceWorker.register('service-worker.js')
-    .then(registration => {
-      return registration.pushManager.getSubscription()
-      .then(subscription => {
-        
-        if (subscription) {
-          return subscription
-        }
-        
-        return registration.pushManager.subscribe({ userVisibleOnly: true })
-      })
-    }).then(subscription => {
-      endpoint = subscription.endpoint
+    const encodedKey = require('../../config.js').vapidKeys.publicKey
+    const decodedKey = urlsafeBase64.decode(encodedKey)
+    const vapidPublicKey = new Uint8Array(decodedKey)
 
-      fetch('/api/register', {
-        method: 'post',
-        headers: {
-          'Content-type': 'application/json'
-        },
-        body: JSON.stringify({
-          endpoint: subscription.endpoint
+    if (navigator.serviceWorker) {
+      navigator.serviceWorker.register('/service-worker.js')
+      .then(reg => {
+        console.log('New service worker registered.')
+        
+        navigator.serviceWorker.ready
+        .then(serviceWorkerRegistration => {
+          serviceWorkerRegistration.pushManager
+          .subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: vapidPublicKey
+          })
+          .then(subscription => {
+            fetch('/api/register', {
+              method: 'post',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                subscription: subscription.toJSON()
+              })
+            })
+          })
         })
       })
-    }) 
+    }
+    else {
+      console.error('Service workers are not supported in this browser.')
+    }
   }
 
   render() {
