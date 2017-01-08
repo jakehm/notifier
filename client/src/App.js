@@ -8,9 +8,14 @@ class App extends Component {
 
   constructor() {
     super()
+    
+    this.subscribe = this.subscribe.bind(this)
+
     this.state = {
       tweets: [],
-      isLoading: true
+      isLoading: true,
+      isRegistered: false,
+      isSubscribed: false
     }
   }
 
@@ -40,36 +45,58 @@ class App extends Component {
     }, 15*1000)
   }
 
-  subscribe(e) {
-    const encodedKey = require('../../config.js').vapidKeys.publicKey
+  registerServiceWorker() {
+    return navigator.serviceWorker.register('/service-worker.js')
+    .then(reg => {
+      reg.update()
+      console.log('New service worker registered with scope: ' + reg.scope)
+      this.setState({isRegistered: true})
+    })  
+    .catch(err => {
+        console.log('Service worker registration failed: ' + err)
+    })
+  }
+
+  subscribeServiceWorker() {
+    const encodedKey = require('../../config.js').vapidKeys.publicKey    
     const decodedKey = urlsafeBase64.decode(encodedKey)
     const vapidPublicKey = new Uint8Array(decodedKey)
 
-    if (navigator.serviceWorker) {
-      navigator.serviceWorker.register('/service-worker.js')
-      .then(reg => {
-        console.log('New service worker registered.')
-        
-        navigator.serviceWorker.ready
-        .then(serviceWorkerRegistration => {
-          serviceWorkerRegistration.pushManager
-          .subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: vapidPublicKey
-          })
-          .then(subscription => {
-            fetch('/api/register', {
-              method: 'post',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                subscription: subscription.toJSON()
-              })
-            })
+    return navigator.serviceWorker.ready
+    .then(serviceWorkerRegistration => {
+      serviceWorkerRegistration.pushManager
+      .subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: vapidPublicKey
+      })
+      .then(subscription => {
+        this.setState({ isSubscribed: true })
+        fetch('/api/register', {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            subscription: subscription.toJSON()
           })
         })
       })
+    })
+  }
+
+
+  subscribe(e) {
+
+    if ('serviceWorker' in navigator) {
+      
+      if (!this.state.isRegistered) {
+        this.registerServiceWorker()
+      }
+
+      if(!this.state.isSubscribed) {
+        this.subscribeServiceWorker()
+      }
+
     }
     else {
       console.error('Service workers are not supported in this browser.')
