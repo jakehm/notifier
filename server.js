@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser')
@@ -7,13 +9,13 @@ const twitter = require('./twitterAPI')
 const Twitter = require('twitter')
 const webpush = require('web-push')
 
-const vapidPublicKey = require('./config').vapidKeys.publicKey
-const vapidPrivateKey = require('./config').vapidKeys.privateKey
-
-
 //set up the twitter stream
-const config = require('./config')
-const client = new Twitter(config.twitter)
+const client = new Twitter(
+  consumer_key: process.env.CONSUMER_KEY,
+  consumer_secret: process.env.CONSUMER_SECRET,
+  access_token_key: process.env.ACCESS_TOKEN_KEY,
+  access_token_secret: process.env.ACCESS_TOKEN_SECRET
+)
 const params = { follow: '811198401379495940' }
 const twitterStream = client.stream('statuses/filter', params)
 
@@ -51,8 +53,8 @@ app.post('/api/register', (req, res) => {
       TTL: 24*60*60,
       vapidDetails: {
         subject: 'mailto:jake@lightninging.us',
-        publicKey: vapidPublicKey,
-        privateKey: vapidPrivateKey
+        publicKey: process.env.PUBLIC_KEY,
+        privateKey: process.env.PRIVATE_KEY
       }
     }
     

@@ -28,7 +28,7 @@ class App extends Component {
   }
 
   subscribeServiceWorker() {
-    const encodedKey = require('../../config.js').vapidKeys.publicKey    
+    const encodedKey = process.env.PUBLIC_KEY    
     const decodedKey = urlsafeBase64.decode(encodedKey)
     const vapidPublicKey = new Uint8Array(decodedKey)
 
