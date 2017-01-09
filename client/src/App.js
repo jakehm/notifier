@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
-import client from './client'
 import urlsafeBase64 from 'urlsafe-base64'
 
 class App extends Component {
@@ -12,37 +10,9 @@ class App extends Component {
     this.subscribe = this.subscribe.bind(this)
 
     this.state = {
-      tweets: [],
-      isLoading: true,
       isRegistered: false,
       isSubscribed: false
     }
-  }
-
-  componentWillMount() {
-    this.getTweets()
-    this.startPoll()
-  }
-
-  componentWillUnmount() {
-    clearTimeout(this.timeout)
-  }
-
-  getTweets() {
-    this.setState({ isLoading: true})
-    client.get(tweets => {
-      console.log("refreshing tweets")
-      this.setState({ 
-        tweets,
-        isLoading: false 
-      })
-    })
-  }
-
-  startPoll() {
-    this.timeout = setTimeout(() => {
-      this.getTweets()
-    }, 15*1000)
   }
 
   registerServiceWorker() {
@@ -84,7 +54,6 @@ class App extends Component {
     })
   }
 
-
   subscribe(e) {
 
     if ('serviceWorker' in navigator) {
@@ -107,28 +76,12 @@ class App extends Component {
     return (
       <div className="App">
         <div className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
           <h2>Welcome to Notifier</h2>
         </div>
-        {this.state.isLoading && 
-          <p>Loading...</p>
-        }
-        <button onClick={this.subscribe}>subscribe</button>
-        <p className="App-intro">
-          Tweets
-        </p>
-        <ul>
-          {this.state.tweets.map((tweet, index) => {
-            return(
-              <li key={index}> 
-                <h3>{tweet.created_at}</h3>
-                <p>{tweet.text}</p>
-              </li>
-            )
-          })}
-        </ul>
+        <br />
+        <button onClick={this.subscribe}>subscribe to Trump's twitter</button>
       </div>
-    );
+    )
   }
 }
 
