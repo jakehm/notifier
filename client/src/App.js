@@ -28,7 +28,7 @@ class App extends Component {
   }
 
   subscribeServiceWorker() {
-    const encodedKey = process.env.PUBLIC_KEY    
+    const encodedKey = "BFZv8KVT8NiY62iAMpISqs2Y-GY6YZI5I24CUDq-DEhfhASgf2nOqPIGAO4i8ulf_GPtWd3F_yf0CPFdtC7f5Ik"
     const decodedKey = urlsafeBase64.decode(encodedKey)
     const vapidPublicKey = new Uint8Array(decodedKey)
 
