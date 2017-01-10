@@ -4,18 +4,16 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser')
 
-const twitter = require('./twitterAPI')
-
 const Twitter = require('twitter')
 const webpush = require('web-push')
 
 //set up the twitter stream
-const client = new Twitter(
+const client = new Twitter({
   consumer_key: process.env.CONSUMER_KEY,
   consumer_secret: process.env.CONSUMER_SECRET,
   access_token_key: process.env.ACCESS_TOKEN_KEY,
   access_token_secret: process.env.ACCESS_TOKEN_SECRET
-)
+})
 const params = { follow: '811198401379495940' }
 const twitterStream = client.stream('statuses/filter', params)
 
@@ -28,22 +26,6 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 app.use(bodyParser.json())
-
-//endpoint is /api/tweets?q=realDonaldTrump
-app.get('/api/tweets', (req, res) => {
-  twitter
-    .then(tweets => {
-      const response = tweets.map(tweet => {
-        return { 
-          created_at: tweet.created_at, 
-          text: tweet.text
-        }
-      })
-      res.json(response)
-    })
-
-});
-
 
 app.post('/api/register', (req, res) => {
   const subscription = req.body.subscription
