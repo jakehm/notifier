@@ -22,6 +22,15 @@ const twitterStream = client.stream('statuses/filter', params)
 
 app.set('port', (process.env.PORT || 3001));
 
+//force heroku to use ssl
+app.get('*', function(req,res,next) {
+  if(req.headers['x-forwarded-proto'] != 'https' && process.env.NODE_ENV === 'production')
+    res.redirect('https://'+req.hostname+req.url)
+  else
+    next() /* Continue to other routes if we're not redirecting */
+});
+
+
 // Express only serves static assets in production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static('client/build'));
