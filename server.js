@@ -39,6 +39,14 @@ if (process.env.NODE_ENV === 'production') {
 app.use(bodyParser.json())
 
 app.post('/api/register', (req, res) => {
+  const content = req.body.content
+  client.get('users/show', { screen_name: content.screen_name })
+  .then(user => {
+    console.log(user.id)  
+  })
+  .catch(err => {
+    console.error(err)
+  })
   const subscription = req.body.subscription
   
   setTimeout(() => {
@@ -50,6 +58,13 @@ app.post('/api/register', (req, res) => {
         privateKey: process.env.PRIVATE_KEY
       }
     }
+
+    webpush.sendNotification(
+      subscription,
+      "You are now signed up for notifications.",
+      options
+    )
+
     
     twitterStream.on('data', event => {
       const message = JSON.stringify({

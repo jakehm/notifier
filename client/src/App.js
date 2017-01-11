@@ -8,14 +8,30 @@ class App extends Component {
     super()
     
     this.subscribe = this.subscribe.bind(this)
+    this.isLoading = this.isLoading.bind(this)
+    this.isNotLoading = this.isNotLoading.bind(this)
+    this.handleSubmit = this.handleSubmit.bind(this)
+    this.handleChange = this.handleChange.bind(this)
 
     this.state = {
       isRegistered: false,
-      isSubscribed: false
+      isSubscribed: false,
+      isLoading: false,
+      twitterValue: 'realDonaldTrump',
+      content: null
+
     }
   }
 
+  isLoading() {
+    this.setState({ isLoading: true })
+  }
+  isNotLoading() {
+    this.setState({ isLoading: false })
+  }
+
   registerServiceWorker() {
+    this.isLoading()
     return navigator.serviceWorker.register('/service-worker.js')
     .then(reg => {
       reg.update()
@@ -31,6 +47,7 @@ class App extends Component {
     const encodedKey = "BFZv8KVT8NiY62iAMpISqs2Y-GY6YZI5I24CUDq-DEhfhASgf2nOqPIGAO4i8ulf_GPtWd3F_yf0CPFdtC7f5Ik"
     const decodedKey = urlsafeBase64.decode(encodedKey)
     const vapidPublicKey = new Uint8Array(decodedKey)
+    this.isLoading()
 
     return navigator.serviceWorker.ready
     .then(serviceWorkerRegistration => {
@@ -47,29 +64,50 @@ class App extends Component {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            subscription: subscription.toJSON()
+            subscription: subscription.toJSON(),
+            content: this.state.content
           })
         })
+        .then(response => {
+          this.isNotLoading()  
+        })
+      })
+      .catch(err => {
+        this.isNotLoading()
+        console.error(err)
       })
     })
   }
 
-  subscribe(e) {
+  subscribe() {
 
     if ('serviceWorker' in navigator) {
       
       if (!this.state.isRegistered) {
         this.registerServiceWorker()
-      }
-
-      if(!this.state.isSubscribed) {
-        this.subscribeServiceWorker()
+        .then(()=> {
+          if(!this.state.isSubscribed) {
+            this.subscribeServiceWorker()
+          }
+        })
       }
 
     }
     else {
       console.error('Service workers are not supported in this browser.')
     }
+  }
+
+  handleChange(event) {
+    this.setState({twitterValue: event.target.value})
+  }
+
+  handleSubmit(event) {
+    event.preventDefault()
+    this.setState({ 
+      content: { screen_name: this.state.twitterValue }
+    })
+    this.subscribe()
   }
 
   render() {
@@ -79,7 +117,18 @@ class App extends Component {
           <h2>Welcome to Notifier</h2>
         </div>
         <br />
-        <button onClick={this.subscribe}>subscribe to Trump's twitter</button>
+        {this.state.isLoading &&
+          <p>Loading...</p>
+        }
+        <form onSubmit={this.handleSubmit}>
+          <label> Screen name:
+            <input type="text" 
+              value={this.state.twitterValue}
+              onChange={this.handleChange}
+            />
+          </label>
+          <input type="submit" value="Subscribe" />
+        </form> 
       </div>
     )
   }
