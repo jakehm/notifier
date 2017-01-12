@@ -1,12 +1,11 @@
-self.addEventListener('push', (event) => {
-  
 
+self.addEventListener('push', (event) => {
   const content = JSON.parse(event.data.text())
 
-  title  = content.title 
-  body = content.body
+  const title  = content.title 
+  const body = content.body
 
   event.waitUntil(
-    self.registration.showNotification(title, { body})
+    self.registration.showNotification(title, { body })
   )
 })

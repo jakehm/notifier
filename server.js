@@ -16,8 +16,11 @@ const client = new Twitter({
   access_token_key: process.env.ACCESS_TOKEN_KEY,
   access_token_secret: process.env.ACCESS_TOKEN_SECRET
 })
-const params = { follow: '811198401379495940' }
-const twitterStream = client.stream('statuses/filter', params)
+let idList = [811198401379495940]
+let twitterStream = client.stream(
+  'statuses/filter', 
+  { follow: idList }
+)
 
 
 app.set('port', (process.env.PORT || 3001));
@@ -40,50 +43,60 @@ app.use(bodyParser.json())
 
 app.post('/api/register', (req, res) => {
   const content = req.body.content
-  client.get('users/show', { screen_name: content.screen_name })
+  const screen_name = content.screen_name
+  const subscription = req.body.subscription
+  const options = {
+    TTL: 24*60*60,
+    vapidDetails: {
+      subject: 'mailto:jake@lightninging.us',
+      publicKey: process.env.PUBLIC_KEY,
+      privateKey: process.env.PRIVATE_KEY
+    }
+  }
+
+
+  client.get('users/show', { screen_name })
   .then(user => {
     console.log(user.id)  
+    setTimeout(() => {
+      
+      webpush.sendNotification(
+        subscription,
+        JSON.stringify({
+          title: "Subcription Confirmation",
+          body: "You are now subscribed to push notifications."
+        }),
+        options
+      )
+      
+      idList.push(user.id)
+      twitterStream = client.stream(
+        'statuses/filter', 
+        { follow: idList.join() }
+      )
+      
+      twitterStream.on('data', event => {
+        console.log(event)
+        if (event.user.id !== user.id)
+          return
+        console.log("event matched user.id")
+        const message = JSON.stringify({
+          title: event.user.screen_name,
+          body: event.text
+        })
+
+        webpush.sendNotification(
+          subscription,
+          message,
+          options
+        )
+      })
+    }, 0)  
   })
   .catch(err => {
     console.error(err)
   })
-  const subscription = req.body.subscription
   
-  setTimeout(() => {
-    const options = {
-      TTL: 24*60*60,
-      vapidDetails: {
-        subject: 'mailto:jake@lightninging.us',
-        publicKey: process.env.PUBLIC_KEY,
-        privateKey: process.env.PRIVATE_KEY
-      }
-    }
-
-    webpush.sendNotification(
-      subscription,
-      "You are now signed up for notifications.",
-      options
-    )
-
-    
-    twitterStream.on('data', event => {
-      const message = JSON.stringify({
-        body: event.text
-      })
-
-      webpush.sendNotification(
-        subscription,
-        message,
-        options
-      )
-    })
-
-    twitterStream.on('error', error => {
-      throw error
-    })
-  
-  }, 0)
-
   res.send('OK')
 })
 
