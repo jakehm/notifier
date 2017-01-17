@@ -7,7 +7,6 @@ class App extends Component {
   constructor() {
     super()
     
-    this.subscribe = this.subscribe.bind(this)
     this.isLoading = this.isLoading.bind(this)
     this.isNotLoading = this.isNotLoading.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
@@ -58,6 +57,7 @@ class App extends Component {
       })
       .then(subscription => {
         this.setState({ isSubscribed: true })
+        
         fetch('/api/register', {
           method: 'post',
           headers: {
@@ -65,7 +65,7 @@ class App extends Component {
           },
           body: JSON.stringify({
             subscription: subscription.toJSON(),
-            content: this.state.content
+            screen_name: this.state.twitterValue
           })
         })
         .then(response => {
@@ -79,7 +79,12 @@ class App extends Component {
     })
   }
 
-  subscribe() {
+  handleChange(event) {
+    this.setState({twitterValue: event.target.value})
+  }
+
+  handleSubmit(event) {
+    event.preventDefault()
 
     if ('serviceWorker' in navigator) {
       
@@ -98,24 +103,16 @@ class App extends Component {
     }
   }
 
-  handleChange(event) {
-    this.setState({twitterValue: event.target.value})
-  }
-
-  handleSubmit(event) {
-    event.preventDefault()
-    this.setState({ 
-      content: { screen_name: this.state.twitterValue }
-    })
-    this.subscribe()
-  }
-
   render() {
     return (
       <div className="App">
         <div className="App-header">
           <h2>Welcome to Notifier</h2>
         </div>
+        <br />
+        <h2>How this works</h2>  Not working with Safari.  <br />
+        Enter the twitter screen name of someone you want notifications for.  Like maybe if you want the US President's tweets to go straight to your phone notifications.
+        <br />
         <br />
         {this.state.isLoading &&
           <p>Loading...</p>
