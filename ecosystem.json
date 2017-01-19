@@ -1,0 +1,9 @@
+{
+	"apps": [{
+		"name": "notifier-server",
+		"script": "--interpreter babel-node server.js"
+	}, {
+	"name": "notifier-client",
+	"script": "--interpreter babel-node start-client.js"
+	}]
+}
