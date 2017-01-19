@@ -24,49 +24,59 @@ const options = {
 }
 
 // init db
-const db = promisify(level('notify.db', { valueEncoding: 'json' }))
+const db = promisify(level('notify.db',
+  { valueEncoding: 'json' }))
 
+function generateIdList(db) {
+  return new Promise((resolve, reject) => {
+    let idList = []
+    db.createReadStream()
+      .on('data', data => {
+        console.log("data from read stream:")
+        console.log(data)
+        idList.push(data.key)
+      })
+      .on('error', error => {
+        console.log ('there was an error while reading the db', error)
+        reject(error)
+      })
+      .on('end', () => {
+        console.log('done reading from the db')
+        resolve(idList)
+      })
+  })
+}
+  
 //keep these in global scope so that I can end the stream from outside the function
 let twitterStream
-
 function initiateTwitterStream(db) {
-  let idList = []
-  db.createReadStream()
-    .on('data', data => {
-      console.log("data from read stream:")
-      console.log(data)
-      idList.push(data.key)
-    })
-    .on('error', error => {
-      console.log ('there was an error while reading the db', error)
-    })
-    .on('end', () => {
-      if (idList.length === 0)
-        return
-
-      console.log('done reading from the db')
-      Twitter.stream(idList, stream => {
-        twitterStream = stream
-        stream.on('data', event => {
-          console.log("got data from stream")
-          db.get(event.user.id_str)
-            .then(subscriptions => {
-              console.log("found subscriptions associated with stream data")
-              for (const subscription of subscriptions) {
-                const message = JSON.stringify({
-                  title: event.user.screen_name,
-                  body: event.text
-                })
-                webpush.sendNotification(
-                  subscription,
-                  message,
-                  options
-                )
-              }
-            })
-        })
+  console.log('initializing twitter stream')
+  return generateIdList(db).then(idList => {
+    if (idList.length === 0)
+      return
+    console.log('setting up twitter stream')
+    Twitter.stream(idList, stream => {
+      twitterStream = stream
+      stream.on('data', event => {
+        console.log("got data from stream")
+        db.get(event.user.id_str)
+          .then(subscriptions => {
+            console.log("found subscriptions associated with stream data")
+            for (const subscription of subscriptions) {
+              const message = JSON.stringify({
+                title: event.user.screen_name,
+                body: event.text
+              })
+              webpush.sendNotification(
+                subscription,
+                message,
+                options
+              )
+            }
+          })
       })
     })
+  })
 }
 
 initiateTwitterStream(db)
@@ -97,10 +107,13 @@ app.post('/api/register', (req, res) => {
       return db.get(userId)
     })
     .then(subList => {
+      console.log('sublist found on userId: ')
+      console.log(subList)
       if (subList.indexOf(subscription) === -1) {
-        const newSubList = subList.push(subscription)
-        console.log("printing new sublist: " + newSubList)
-        return db.put(userId, newSubList)
+        console.log("userId found, but that subscription does not exist for it yet")
+        subList.push(subscription)
+        console.log("printing new sublist: " + subList)
+        return db.put(userId, subList)
       } else {
         console.log("subscription already found in ")
         console.log(subList)
@@ -111,8 +124,10 @@ app.post('/api/register', (req, res) => {
     }).then(() => {
       console.log("twitterStream:")
       console.log(twitterStream)
-      if (twitterStream)
+      if (twitterStream) {
+        console.log('destroying twitter stream')
         twitterStream.destroy()
+      }
 
       initiateTwitterStream(db)
     })
