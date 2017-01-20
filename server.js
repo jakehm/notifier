@@ -54,15 +54,23 @@ function initiateTwitterStream(db) {
   return generateIdList(db).then(idList => {
     if (idList.length === 0)
       return
-    console.log('setting up twitter stream')
+    console.log('initializing twitter stream')
+    console.log('idList=')
+    console.log(idList)
     Twitter.stream(idList, stream => {
       twitterStream = stream
       stream.on('data', event => {
-        console.log("got data from stream")
+        const userId = event.user.id_str
+
+        //a lot of tweets come in on the stream from people replying
+        //to the followed userId.  This ignores those. 
+        if (idList.indexOf(userId) === -1)
+          return
+
         db.get(event.user.id_str)
           .then(subscriptions => {
             console.log("found subscriptions associated with stream data")
-            for (const subscription of subscriptions) {
+            subscriptions.forEach(subscription => {
               const message = JSON.stringify({
                 title: event.user.screen_name,
                 body: event.text
@@ -72,8 +80,12 @@ function initiateTwitterStream(db) {
                 message,
                 options
               )
-            }
+            })
           })
+          .catch(error => {
+            console.log("something went wrong, userId not found in db")
+          })
+
       })
     })
   })

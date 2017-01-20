@@ -11,14 +11,15 @@ class App extends Component {
     this.isNotLoading = this.isNotLoading.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
     this.handleChange = this.handleChange.bind(this)
+    this.handleAddTwitter = this.handleAddTwitter.bind(this)
 
     this.state = {
       isRegistered: false,
       isSubscribed: false,
       isLoading: false,
       twitterValue: 'realDonaldTrump',
-      content: null
-
+      content: null,
+      twitterList: []
     }
   }
 
@@ -103,14 +104,27 @@ class App extends Component {
     }
   }
 
+  handleAddTwitter(event) {
+    event.preventDefault()
+    this.setState({
+      twitterList: [...this.state.twitterList, this.state.twitterValue],
+      twitterValue: ""
+    })
+  }
+
   render() {
+
+    const twitterList = this.state.twitterList.map((item, index) => 
+      <li key={index}>{item}</li>
+    )
+
     return (
       <div className="App">
         <div className="App-header">
           <h2>Welcome to Notifier</h2>
         </div>
         <br />
-        <h2>How this works</h2>  Not working with Safari.  <br />
+        <h3>How this works</h3>  Not working with Safari.  <br />
         Enter the twitter screen name of someone you want notifications for.  Like maybe if you want the US President's tweets to go straight to your phone notifications.
         <br />
         <br />
@@ -124,8 +138,14 @@ class App extends Component {
               onChange={this.handleChange}
             />
           </label>
+          <button onClick={this.handleAddTwitter}>add</button>
+          <br />
+          <br />
           <input type="submit" value="Subscribe" />
         </form> 
+      <ul>
+        {twitterList}
+      </ul>
       </div>
     )
   }
