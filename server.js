@@ -70,7 +70,9 @@ function initiateTwitterStream(db) {
         db.get(event.user.id_str)
           .then(subscriptions => {
             console.log("found subscriptions associated with stream data")
+            console.log("subscriptions count = ", subscriptions.length)
             subscriptions.forEach(subscription => {
+              console.log("pushing subscription")
               const message = JSON.stringify({
                 title: event.user.screen_name,
                 body: event.text
@@ -79,7 +81,14 @@ function initiateTwitterStream(db) {
                 subscription,
                 message,
                 options
-              )
+              ).then(data => {
+                console.log("webpush ok with statuscode: ", data.statusCode)
+              }).catch(err => {
+                console.log("the web push fucked up, statuscode: ", err.statusCode)
+                if (err.statusCode == 410)
+                  console.log("Subscription not registered.  Deleting..")
+                  db.del()
+              })
             })
           })
           .catch(error => {
