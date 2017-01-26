@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 import urlsafeBase64 from 'urlsafe-base64'
+import List from './components/List'
 
 class App extends Component {
 
@@ -99,6 +100,8 @@ class App extends Component {
       }
 
     }
+
+
     else {
       console.error('Service workers are not supported in this browser.')
     }
@@ -113,10 +116,6 @@ class App extends Component {
   }
 
   render() {
-
-    const twitterList = this.state.twitterList.map((item, index) => 
-      <li key={index}>{item}</li>
-    )
 
     return (
       <div className="App">
@@ -143,9 +142,7 @@ class App extends Component {
           <br />
           <input type="submit" value="Subscribe" />
         </form> 
-      <ul>
-        {twitterList}
-      </ul>
+        <List items={this.state.twitterList} />
       </div>
     )
   }
