@@ -86,8 +86,17 @@ function initiateTwitterStream(db) {
               }).catch(err => {
                 console.log("the web push fucked up, statuscode: ", err.statusCode)
                 if (err.statusCode == 410)
-                  console.log("Subscription not registered.  Deleting..")
-                  db.del()
+                  console.log("Subscription not registered.  Deleting...")
+                  db.put(userId, subscriptions.filter(sub => {
+                    return sub != subscription
+                  }))
+                  .then(data => {
+                    console.log("unregistered subscription was deleted")
+                  })
+                  .catch(err => {
+                    console.log("deleting didn't work.  here's the error: ")
+                    console.log(err)
+                  })
               })
             })
           })
