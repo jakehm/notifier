@@ -164,7 +164,7 @@ render() {
       <br />
       <p>You are subscribed to 
         {this.state.subscribedList.map((e, i, array) => (
-          <span>
+          <span key={i}>
             {array.length>2 && i>0 && <span>,</span>}
             {array.length===(i+1) && i>0 && <span>&nbsp;and</span>}
             &nbsp;<b>{e}</b>
