@@ -1,20 +1,66 @@
 import React from 'react'
 import {List, ListItem} from 'material-ui/List'
-import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider'
-import DeleteForever from 'material-ui/svg-icons/action/delete-forever'
+import Divider from 'material-ui/Divider'
+import Clear from 'material-ui/svg-icons/content/clear'
+import IconButton from 'material-ui/IconButton'
+import Paper from 'material-ui/Paper'
+import RaisedButton from 'material-ui/RaisedButton'
 
-const ListComponent = (props) => (
-	<MuiThemeProvider>
+
+const ListComponent = (props) => {
+
+const styles = {
+	root: {
+		display: 'flex',
+//		alignItems: 'center',
+		justifyContent: 'center',
+		flexWrap: 'wrap',
+		padding: 20,
+		margin: '0 auto'
+	},
+	container: {
+		textAlign: 'center',
+		paddingTop: 10,
+		width: '25%',
+		minWidth: '25%',
+		position: 'relative',
+	}
+}
+
+const deleteButton = index => (
+	<IconButton onClick={(event) => props.onDelete(index, event)}>
+		<Clear />
+	</IconButton>
+)
+
+return(
+	<div>
+	{props.items.length > 0 &&
+	<div style={styles.root}>
+	<div style={{padding: 10}}>
+	<RaisedButton label="subscribe" primary={true} 
+		onClick={(e) => props.onSubscribe(e)}
+	/>
+	</div>
+	<Paper style={styles.container}>
 	<List>
 		{props.items.map((currentValue, index) => (
+			<div key={index}>
+			{index > 0 &&
+				<Divider />
+			}
 			<ListItem 
 				primaryText={currentValue} 
-				rightIcon={<DeleteForever />}
-				key={index}
+				rightIconButton={deleteButton(index)}
 			/>
+			</div>
 		))}
 	</List>
-	</MuiThemeProvider>
+	</Paper>
+	</div>
+	}
+	</div>
 )
+}
 
 export default ListComponent

@@ -3,6 +3,8 @@ import './App.css';
 import urlsafeBase64 from 'urlsafe-base64'
 import List from './components/List'
 
+import RaisedButton from 'material-ui/RaisedButton'
+
 class App extends Component {
 
   constructor() {
@@ -10,9 +12,10 @@ class App extends Component {
     
     this.isLoading = this.isLoading.bind(this)
     this.isNotLoading = this.isNotLoading.bind(this)
-    this.handleSubmit = this.handleSubmit.bind(this)
+    this.handleSubscribe = this.handleSubscribe.bind(this)
     this.handleChange = this.handleChange.bind(this)
     this.handleAddTwitter = this.handleAddTwitter.bind(this)
+    this.handleDelete = this.handleDelete.bind(this)
 
     this.state = {
       isRegistered: false,
@@ -40,7 +43,7 @@ class App extends Component {
       this.setState({isRegistered: true})
     })  
     .catch(err => {
-        console.log('Service worker registration failed: ' + err)
+      console.log('Service worker registration failed: ' + err)
     })
   }
 
@@ -67,7 +70,7 @@ class App extends Component {
           },
           body: JSON.stringify({
             subscription: subscription.toJSON(),
-            screen_name: this.state.twitterValue
+            screenNameList: this.state.twitterList
           })
         })
         .then(response => {
@@ -85,67 +88,95 @@ class App extends Component {
     this.setState({twitterValue: event.target.value})
   }
 
-  handleSubmit(event) {
+  handleSubscribe(event) {
     event.preventDefault()
-
+    console.log("entering handleSubscribe")
     if ('serviceWorker' in navigator) {
-      
-      if (!this.state.isRegistered) {
-        this.registerServiceWorker()
-        .then(()=> {
-          if(!this.state.isSubscribed) {
-            this.subscribeServiceWorker()
-          }
+      this.registerServiceWorker()
+      .then(()=> {
+        return this.subscribeServiceWorker()
+      }).then(() => {
+        const subscribedList = this.state.twitterList
+        this.setState({
+          twitterList: [],
+          subscribedList: subscribedList
         })
-      }
+    
+      })
 
-    }
-
-
-    else {
+    } else {
       console.error('Service workers are not supported in this browser.')
     }
   }
 
-  handleAddTwitter(event) {
-    event.preventDefault()
-    this.setState({
-      twitterList: [...this.state.twitterList, this.state.twitterValue],
-      twitterValue: ""
-    })
-  }
+handleAddTwitter(event) {
+  this.setState({
+    twitterList: [...this.state.twitterList, this.state.twitterValue],
+    twitterValue: ""
+  })
+}
 
-  render() {
+handleDelete(index, event) {
+  event.preventDefault()
+  const twitterList = this.state.twitterList.filter((e, i) => {
+    return index !== i
+  })
 
-    return (
-      <div className="App">
-        <div className="App-header">
-          <h2>Welcome to Notifier</h2>
-        </div>
-        <br />
-        <h3>How this works</h3>  Not working with Safari.  <br />
-        Enter the twitter screen name of someone you want notifications for.  Like maybe if you want the US President's tweets to go straight to your phone notifications.
-        <br />
-        <br />
-        {this.state.isLoading &&
-          <p>Loading...</p>
-        }
-        <form onSubmit={this.handleSubmit}>
-          <label> Screen name:
-            <input type="text" 
-              value={this.state.twitterValue}
-              onChange={this.handleChange}
-            />
-          </label>
-          <button onClick={this.handleAddTwitter}>add</button>
-          <br />
-          <br />
-          <input type="submit" value="Subscribe" />
-        </form> 
-        <List items={this.state.twitterList} />
-      </div>
+  this.setState({
+    twitterList: twitterList
+  })
+}
+
+render() {
+
+  return (
+    <div className="App">
+    <div className="App-header">
+    <h2>Welcome to Notifier</h2>
+    </div>
+    <br />
+    <h3>How this works</h3>  
+    Don't use Safari.<br />
+    Enter the twitter screen name of someone you want notifications for.<br />
+    Get the immediacy of Twitter without the bloat. 
+    <br />
+    <br />
+    {this.state.isLoading &&
+      <p>Loading...</p>
+    }
+    <label> Screen name: <span>&nbsp;</span>
+    <input type="text" 
+    value={this.state.twitterValue}
+    onChange={this.handleChange}
+    style={{padding: 10}}
+    />
+    </label>
+    <RaisedButton onClick={this.handleAddTwitter} style={{margin:10}} 
+      label="Add"
+    />
+    <br />
+    <br />
+    <List items={this.state.twitterList} onSubscribe={this.handleSubscribe} 
+      onDelete={this.handleDelete}
+    />
+    {this.state.subscribedList &&
+    <div>
+      <br />
+      <p>You are subscribed to 
+        {this.state.subscribedList.map((e, i, array) => (
+          <span>
+            {array.length>2 && i>0 && <span>,</span>}
+            {array.length===(i+1) && i>0 && <span>&nbsp;and</span>}
+            &nbsp;<b>{e}</b>
+            {array.length===(i+1) && <span>.</span>}
+          </span>
+        ))}
+      </p> 
+    </div>
+    }
+    </div>
     )
-  }
+}
 }
 
 export default App;

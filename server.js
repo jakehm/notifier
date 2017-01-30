@@ -47,9 +47,16 @@ function generateIdList(db) {
   })
 }
   
-//keep these in global scope so that I can end the stream from outside the function
+//keep this in global scope so that I can check 
+//if the stream is has already been turned on
 let twitterStream
 function initiateTwitterStream(db) {
+
+  if (twitterStream) {
+    console.log('destroying twitter stream before initialization')
+    twitterStream.destroy()
+  }
+
   console.log('initializing twitter stream')
   return generateIdList(db).then(idList => {
     if (idList.length === 0)
@@ -123,57 +130,62 @@ app.use(bodyParser.json())
 
 
 //primary api
+
 app.post('/api/register', (req, res) => {
-  const screen_name = req.body.screen_name
+  const screenNames = req.body.screenNameList
   const subscription = req.body.subscription
-  
-  //ugly higher scope variable because I need to access 
-  //the return of a promise further down in the promise chain
-  let userId
 
-  Twitter.convertScreenNameToId(screen_name)
-    .then(_userId => {
-      userId = _userId
-      return db.get(userId)
-    })
-    .then(subList => {
-      console.log('sublist found on userId: ')
-      console.log(subList)
-      if (subList.indexOf(subscription) === -1) {
-        console.log("userId found, but that subscription does not exist for it yet")
-        subList.push(subscription)
-        console.log("printing new sublist: " + subList)
-        return db.put(userId, subList)
-      } else {
-        console.log("subscription already found in ")
-        console.log(subList)
-      }
-    }).catch(err => {
-      console.log("no subs found for that userid, making new entry in db")
-      return db.put(userId, [subscription])
+  function sendConfirmation(subscription) {
+    webpush.sendNotification(
+      subscription,
+      JSON.stringify({
+        title: "Subcription Confirmation",
+        body: "You are now subscribed to push notifications."
+      }),
+      options
+    )
+  }
+
+  function addScreenNames(screenNames) {
+    return Promise.all(screenNames.map(screenName => {
+      return addScreenName(screenName)
+    })).then(() => {
+      return initiateTwitterStream(db)
     }).then(() => {
-      console.log("twitterStream:")
-      console.log(twitterStream)
-      if (twitterStream) {
-        console.log('destroying twitter stream')
-        twitterStream.destroy()
-      }
-
-      initiateTwitterStream(db)
+      return sendConfirmation(subscription)
+    }).then(() => {
+      res.send('OK')
+    }).catch((error) => {
+      console.log(error)
     })
-  console.log("about to push confirmation notification")
-  console.log("subscription:")
-  console.log(subscription)
-  webpush.sendNotification(
-    subscription,
-    JSON.stringify({
-      title: "Subcription Confirmation",
-      body: "You are now subscribed to push notifications."
-    }),
-    options
-  )
- 
-  res.send('OK')
+  }
+
+  function addScreenName(screen_name) {
+    let userId
+     return Twitter.convertScreenNameToId(screen_name)
+      .then(_userId => {
+        userId = _userId
+        return db.get(userId)
+      })
+      .then(subList => {
+        console.log('sublist found on userId: ')
+        console.log(subList)
+        if (subList.indexOf(subscription) === -1) {
+          console.log("userId found, but that subscription does not exist for it yet")
+          subList.push(subscription)
+          console.log("printing new sublist: " + subList)
+          return db.put(userId, subList)
+        } else {
+          console.log("subscription already found in ")
+          console.log(subList)
+        }
+      }).catch(err => {
+        console.log("no subs found for that userid, making new entry in db")
+        return db.put(userId, [subscription])
+      })
+  }
+
+  addScreenNames(screenNames)
 })
 
 

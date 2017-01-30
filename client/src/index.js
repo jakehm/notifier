@@ -7,7 +7,9 @@ import './index.css';
 import injectTapEventPlugin from 'react-tap-event-plugin'
 injectTapEventPlugin()
 
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider'
+
 ReactDOM.render(
-  <App />,
+  <MuiThemeProvider><App /></MuiThemeProvider>,
   document.getElementById('root')
 );
