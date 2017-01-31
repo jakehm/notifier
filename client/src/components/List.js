@@ -12,7 +12,6 @@ const ListComponent = (props) => {
 const styles = {
 	root: {
 		display: 'flex',
-//		alignItems: 'center',
 		justifyContent: 'center',
 		flexWrap: 'wrap',
 		padding: 20,
@@ -21,7 +20,6 @@ const styles = {
 	container: {
 		textAlign: 'center',
 		paddingTop: 10,
-		width: '25%',
 		minWidth: '25%',
 		position: 'relative',
 	}

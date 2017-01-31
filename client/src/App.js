@@ -5,6 +5,8 @@ import List from './components/List'
 
 import RaisedButton from 'material-ui/RaisedButton'
 
+import Explanation from './components/Explanation'
+
 class App extends Component {
 
   constructor() {
@@ -135,12 +137,6 @@ render() {
     <h2>Welcome to Notifier</h2>
     </div>
     <br />
-    <h3>How this works</h3>  
-    Don't use Safari.<br />
-    Enter the twitter screen name of someone you want notifications for.<br />
-    Get the immediacy of Twitter without the bloat. 
-    <br />
-    <br />
     {this.state.isLoading &&
       <p>Loading...</p>
     }
@@ -174,6 +170,7 @@ render() {
       </p> 
     </div>
     }
+      <Explanation />
     </div>
     )
 }
