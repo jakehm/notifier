@@ -65,6 +65,12 @@ function initiateTwitterStream(db) {
     console.log('idList=')
     console.log(idList)
     Twitter.stream(idList, stream => {
+
+      stream.on('error', err => {
+        console.log('there was an error initializing the stream')
+        throw err;
+      })
+
       console.log("stream successfully initialized")
       twitterStream = stream
       stream.on('data', event => {
@@ -135,7 +141,6 @@ app.use(bodyParser.json())
 app.post('/api/register', (req, res) => {
   const screenNames = req.body.screenNameList
   const subscription = req.body.subscription
-  console.log(req.body)
   console.log(screenNames)
 
   function sendConfirmation(subscription) {

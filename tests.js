@@ -15,4 +15,17 @@ test('twitter api tests', (t) => {
       'convertScreenNameToId should return an id when passed a screen name'
     )
   })
+
+
+  // twitterApi.stream(['811198401379495940'], stream => {
+  // 	t.pass('twitterApi should work when passing a list of one screen name')
+  // })
+
+  twitterApi.stream([ '25073877', '811198401379495940' ], stream => {
+  	stream.on('data', event => {
+  		t.pass('twitterApi should receive data from twitter')
+  	})
+  })
+
+
 })
