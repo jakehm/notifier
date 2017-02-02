@@ -49,7 +49,7 @@ class App extends Component {
     })
   }
 
-  subscribeServiceWorker() {
+  subscribeServiceWorker(twitterList) {
     const encodedKey = "BFZv8KVT8NiY62iAMpISqs2Y-GY6YZI5I24CUDq-DEhfhASgf2nOqPIGAO4i8ulf_GPtWd3F_yf0CPFdtC7f5Ik"
     const decodedKey = urlsafeBase64.decode(encodedKey)
     const vapidPublicKey = new Uint8Array(decodedKey)
@@ -64,7 +64,7 @@ class App extends Component {
       })
       .then(subscription => {
         this.setState({ isSubscribed: true })
-        
+        console.log(twitterList)
         fetch('/api/register', {
           method: 'post',
           headers: {
@@ -72,7 +72,7 @@ class App extends Component {
           },
           body: JSON.stringify({
             subscription: subscription.toJSON(),
-            screenNameList: this.state.twitterList
+            screenNameList: twitterList
           })
         })
         .then(response => {
@@ -96,7 +96,7 @@ class App extends Component {
     if ('serviceWorker' in navigator) {
       this.registerServiceWorker()
       .then(()=> {
-        return this.subscribeServiceWorker()
+        return this.subscribeServiceWorker(this.state.twitterList)
       }).then(() => {
         const subscribedList = this.state.twitterList
         this.setState({

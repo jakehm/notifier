@@ -135,6 +135,8 @@ app.use(bodyParser.json())
 app.post('/api/register', (req, res) => {
   const screenNames = req.body.screenNameList
   const subscription = req.body.subscription
+  console.log(req.body)
+  console.log(screenNames)
 
   function sendConfirmation(subscription) {
     webpush.sendNotification(
